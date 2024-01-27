@@ -36,6 +36,10 @@ func New(port, target string) (*Client, error) {
 	}, nil
 }
 
+func (c *Client) isValidPacket(header []byte) bool {
+	return string(header[:8]) == "\xff\xff\xff\xffrcon" || string(header[:13]) == "\xff\xff\xff\xffgetstatus" || string(header[:11]) == "\xff\xff\xff\xffgetinfo"
+}
+
 func (c *Client) ListenAndServe() error {
 	var err error
 	c.proxyConn, err = net.ListenUDP("udp", c.laddr)
@@ -50,6 +54,10 @@ func (c *Client) ListenAndServe() error {
 		n, caddr, err := c.proxyConn.ReadFromUDP(buf)
 		if err != nil {
 			log.Println(err)
+		}
+
+		if !c.isValidPacket(buf[:16]) {
+			continue
 		}
 
 		session, found := c.sessions[caddr.String()]
