@@ -13,7 +13,7 @@ Before any major/minor/patch bump all unit tests will be run to verify they pass
 
 ## [0.1.0] - 2024-01-27
 
--   ignore any packets whose header does match a q3 rcon/query packet.
+-   only forward packets if the header matches q3 rcon/query.
 
 ## [0.0.1] - 2024-01-27
 
