@@ -1,10 +1,12 @@
 FROM golang:alpine
 
-# Move to /dist directory as the place for resulting binary folder
 WORKDIR /dist
 
-# Copy binary from build to main folder
-COPY ./main .
+COPY . .
+
+# build binary and place into /usr/local/bin
+RUN go mod download && go mod verify
+RUN go build -v -o /usr/local/bin/q3rcon-proxy ./cmd/q3rcon-proxy
 
 # Command to run when starting the container
-ENTRYPOINT [ "/dist/main" ]
+ENTRYPOINT [ "q3rcon-proxy" ]
