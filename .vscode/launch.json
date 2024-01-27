@@ -5,14 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "http server",
+            "name": "rcon proxy",
             "type": "go",
             "request": "launch",
             "mode": "auto",
-            "program": "${workspaceFolder}/cmd/http/main.go",
+            "program": "${workspaceFolder}/cmd/q3rcon_proxy/main.go",
             "env": {
-                "LILPROXY_TARGET": "127.0.0.1:2456",
-                "LILPROXY_PORT":":9000"
+                "Q3RCON_PROXY": "28961:28960",
             }
         }
     ]
