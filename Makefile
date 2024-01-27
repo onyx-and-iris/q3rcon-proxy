@@ -1,2 +1,2 @@
 go-build:
-	go build cmd/server/main.go	
+	go build ./cmd/q3rcon-proxy/
