@@ -12,13 +12,13 @@ for example:
 export Q3RCON_PROXY="20000:28960;20001:28961;20002:28962"
 ```
 
-This would run 3 proxy servers listening on ports `20000`, `20001` and `20002` that redirect rcon requests to game servers on ports `28960`, `28961` and `28962` respectively.
+This would configure q3rcon-proxy to run 3 proxy servers listening on ports `20000`, `20001` and `20002` that redirect rcon requests to game servers on ports `28960`, `28961` and `28962` respectively.
+
+Then just run the binary which you can compile yourself, download from `Releases` or use the included Dockerfile.
 
 ### Why
 
-Avoid sending plaintext rcon requests (that include the password) to public ports. Instead send them to whitelisted ports.
-
-Gives you the option to disable remote rcon entirely and have the server accept requests only from localhost.
+Avoid sending plaintext rcon commands to the public game server port. In general I would advise anyone using rcon remotely to use a secured connection but perhaps you've passed rcon to a clan friend who doesn't know about secured connections. Now you can instruct them to use rcon only through a whitelisted port.
 
 ### Special Thanks
 
