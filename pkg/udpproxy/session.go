@@ -1,9 +1,11 @@
 package udpproxy
 
 import (
-	"log"
 	"net"
+	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Session struct {
@@ -62,6 +64,8 @@ func (s *Session) proxyTo(buf []byte) error {
 		log.Println(err)
 		return err
 	}
+	parts := strings.Split(string(buf), " ")
+	log.Info("From [", s.caddr, "] Command: ", strings.Join(parts[2:], " "))
 
 	return nil
 }
