@@ -1,10 +1,11 @@
 package udpproxy
 
 import (
-	"log"
 	"net"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type Client struct {
