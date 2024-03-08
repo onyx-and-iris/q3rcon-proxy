@@ -64,8 +64,12 @@ func (s *Session) proxyTo(buf []byte) error {
 		log.Println(err)
 		return err
 	}
-	parts := strings.Split(string(buf), " ")
-	log.Info("From [", s.caddr.IP, "] To [", s.serverConn.RemoteAddr().String(), "] Command: ", strings.Join(parts[2:], " "))
+
+	cmd := string(buf)
+	if cmd[:8] == "\xff\xff\xff\xffrcon" {
+		parts := strings.Split(cmd, " ")
+		log.Info("From [", s.caddr.IP, "] To [", s.serverConn.RemoteAddr().String(), "] Command: ", strings.Join(parts[2:], " "))
+	}
 
 	return nil
 }
