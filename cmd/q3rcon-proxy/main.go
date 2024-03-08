@@ -15,22 +15,33 @@ func start(proxy string) {
 		return x[0], x[1]
 	}()
 
-	c, err := udpproxy.New(fmt.Sprintf("0.0.0.0:%s", port), fmt.Sprintf("127.0.0.1:%s", target))
+	c, err := udpproxy.New(fmt.Sprintf("%s:%s", host, port), fmt.Sprintf("127.0.0.1:%s", target))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("q3rcon-proxy initialized: [proxy] (0.0.0.0:%s) [target] (127.0.0.1:%s)", port, target)
+	log.Printf("q3rcon-proxy initialized: [proxy] (%s:%s) [target] (127.0.0.1:%s)", host, port, target)
 
 	log.Fatal(c.ListenAndServe())
 }
 
-func main() {
-	proxies := os.Getenv("Q3RCON_PROXY")
+var (
+	proxies, host string
+)
+
+func init() {
+	proxies = os.Getenv("Q3RCON_PROXY")
 	if proxies == "" {
 		log.Fatal("env Q3RCON_PROXY required")
 	}
 
+	host = os.Getenv("Q3RCON_HOST")
+	if host == "" {
+		host = "0.0.0.0"
+	}
+}
+
+func main() {
 	for _, proxy := range strings.Split(proxies, ";") {
 		go start(proxy)
 	}
