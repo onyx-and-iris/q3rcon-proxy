@@ -37,18 +37,6 @@ func New(port, target string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) isRconPacket(buf []byte) bool {
-	return string(buf[:8]) == "\xff\xff\xff\xffrcon"
-}
-
-func (c *Client) isQueryPacket(buf []byte) bool {
-	return string(buf[:13]) == "\xff\xff\xff\xffgetstatus" || string(buf[:11]) == "\xff\xff\xff\xffgetinfo"
-}
-
-func (c *Client) isValidPacket(buf []byte) bool {
-	return c.isRconPacket(buf) || c.isQueryPacket(buf)
-}
-
 func (c *Client) ListenAndServe() error {
 	var err error
 	c.proxyConn, err = net.ListenUDP("udp", c.laddr)
@@ -62,18 +50,14 @@ func (c *Client) ListenAndServe() error {
 		buf := make([]byte, 2048)
 		n, caddr, err := c.proxyConn.ReadFromUDP(buf)
 		if err != nil {
-			log.Println(err)
-		}
-
-		if !c.isValidPacket(buf[:n]) {
-			continue
+			log.Error(err)
 		}
 
 		session, found := c.sessions[caddr.String()]
 		if !found {
 			session, err = newSession(caddr, c.raddr, c.proxyConn)
 			if err != nil {
-				log.Println(err)
+				log.Error(err)
 				continue
 			}
 

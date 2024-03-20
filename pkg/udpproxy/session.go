@@ -1,6 +1,7 @@
 package udpproxy
 
 import (
+	"errors"
 	"net"
 	"strings"
 	"time"
@@ -37,6 +38,14 @@ func (s *Session) isRconPacket(buf []byte) bool {
 	return string(buf[:8]) == "\xff\xff\xff\xffrcon"
 }
 
+func (s *Session) isQueryPacket(buf []byte) bool {
+	return string(buf[:13]) == "\xff\xff\xff\xffgetstatus" || string(buf[:11]) == "\xff\xff\xff\xffgetinfo"
+}
+
+func (s *Session) isValidPacket(buf []byte) bool {
+	return s.isRconPacket(buf) || s.isQueryPacket(buf)
+}
+
 func (s *Session) isResponsePacket(buf []byte) bool {
 	return string(buf[:9]) == "\xff\xff\xff\xffprint"
 }
@@ -46,7 +55,7 @@ func (s *Session) listen() error {
 		buf := make([]byte, 2048)
 		n, err := s.serverConn.Read(buf)
 		if err != nil {
-			log.Println(err)
+			log.Error(err)
 			continue
 		}
 
@@ -55,14 +64,18 @@ func (s *Session) listen() error {
 }
 
 func (s *Session) proxyFrom(buf []byte) error {
+	if !s.isResponsePacket(buf) {
+		return nil
+	}
+
 	s.updateTime = time.Now()
 	_, err := s.proxyConn.WriteToUDP(buf, s.caddr)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		return err
 	}
 
-	if s.isResponsePacket(buf) {
+	if log.GetLevel() == log.DebugLevel {
 		parts := strings.Split(string(buf[10:]), " ")
 		log.Debugf("Response: %s", strings.Join(parts, " "))
 	}
@@ -71,10 +84,16 @@ func (s *Session) proxyFrom(buf []byte) error {
 }
 
 func (s *Session) proxyTo(buf []byte) error {
+	if !s.isValidPacket(buf) {
+		err := errors.New("not a rcon or query packet")
+		log.Error(err.Error())
+		return err
+	}
+
 	s.updateTime = time.Now()
 	_, err := s.serverConn.Write(buf)
 	if err != nil {
-		log.Println(err)
+		log.Error(err)
 		return err
 	}
 
