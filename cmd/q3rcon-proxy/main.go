@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"strconv"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/onyx-and-iris/q3rcon-proxy/pkg/udpproxy"
 )
@@ -26,8 +28,20 @@ func start(proxy string) {
 }
 
 var (
-	proxies, host string
+	proxies, host, debug string
 )
+
+func getenvInt(key string) (int, error) {
+	s := os.Getenv(key)
+	if s == "" {
+		return 0, nil
+	}
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, err
+	}
+	return v, nil
+}
 
 func init() {
 	proxies = os.Getenv("Q3RCON_PROXY")
@@ -39,6 +53,18 @@ func init() {
 	if host == "" {
 		host = "0.0.0.0"
 	}
+
+	debug, err := getenvInt("Q3RCON_DEBUG")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if debug == 1 {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
+
 }
 
 func main() {
