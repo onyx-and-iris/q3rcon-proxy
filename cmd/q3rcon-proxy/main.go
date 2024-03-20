@@ -28,7 +28,7 @@ func start(proxy string) {
 }
 
 var (
-	proxies, host, debug string
+	proxies, host string
 )
 
 func getenvInt(key string) (int, error) {
