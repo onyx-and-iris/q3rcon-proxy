@@ -15,7 +15,7 @@ type Session struct {
 	updateTime time.Time
 }
 
-func createSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) (*Session, error) {
+func newSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) (*Session, error) {
 	serverConn, err := net.DialUDP("udp", nil, raddr)
 	if err != nil {
 		return nil, err
@@ -31,6 +31,14 @@ func createSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPCon
 	go session.listen()
 
 	return session, nil
+}
+
+func (s *Session) isRconPacket(buf []byte) bool {
+	return string(buf[:8]) == "\xff\xff\xff\xffrcon"
+}
+
+func (s *Session) isResponsePacket(buf []byte) bool {
+	return string(buf[:9]) == "\xff\xff\xff\xffprint"
 }
 
 func (s *Session) listen() error {
@@ -54,6 +62,11 @@ func (s *Session) proxyFrom(buf []byte) error {
 		return err
 	}
 
+	if s.isResponsePacket(buf) {
+		parts := strings.Split(string(buf[10:]), " ")
+		log.Debugf("Response: %s", strings.Join(parts, " "))
+	}
+
 	return nil
 }
 
@@ -65,10 +78,9 @@ func (s *Session) proxyTo(buf []byte) error {
 		return err
 	}
 
-	cmd := string(buf)
-	if cmd[:8] == "\xff\xff\xff\xffrcon" {
-		parts := strings.Split(cmd, " ")
-		log.Info("From [", s.caddr.IP, "] To [", s.serverConn.RemoteAddr().String(), "] Command: ", strings.Join(parts[2:], " "))
+	if s.isRconPacket(buf) {
+		parts := strings.Split(string(buf), " ")
+		log.Infof("From [%s] To [%s] Command: %s", s.caddr.IP.String(), s.serverConn.RemoteAddr().String(), strings.Join(parts[2:], " "))
 	}
 
 	return nil

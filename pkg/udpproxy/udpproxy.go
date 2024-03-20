@@ -37,8 +37,16 @@ func New(port, target string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) isValidPacket(header []byte) bool {
-	return string(header[:8]) == "\xff\xff\xff\xffrcon" || string(header[:13]) == "\xff\xff\xff\xffgetstatus" || string(header[:11]) == "\xff\xff\xff\xffgetinfo"
+func (c *Client) isRconPacket(buf []byte) bool {
+	return string(buf[:8]) == "\xff\xff\xff\xffrcon"
+}
+
+func (c *Client) isQueryPacket(buf []byte) bool {
+	return string(buf[:13]) == "\xff\xff\xff\xffgetstatus" || string(buf[:11]) == "\xff\xff\xff\xffgetinfo"
+}
+
+func (c *Client) isValidPacket(buf []byte) bool {
+	return c.isRconPacket(buf) || c.isQueryPacket(buf)
 }
 
 func (c *Client) ListenAndServe() error {
@@ -57,13 +65,13 @@ func (c *Client) ListenAndServe() error {
 			log.Println(err)
 		}
 
-		if !c.isValidPacket(buf[:16]) {
+		if !c.isValidPacket(buf[:n]) {
 			continue
 		}
 
 		session, found := c.sessions[caddr.String()]
 		if !found {
-			session, err = createSession(caddr, c.raddr, c.proxyConn)
+			session, err = newSession(caddr, c.raddr, c.proxyConn)
 			if err != nil {
 				log.Println(err)
 				continue
