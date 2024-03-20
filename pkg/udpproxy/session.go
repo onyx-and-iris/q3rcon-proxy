@@ -34,20 +34,28 @@ func newSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) 
 	return session, nil
 }
 
-func (s *Session) isRconPacket(buf []byte) bool {
+func (s *Session) isRconRequestPacket(buf []byte) bool {
 	return string(buf[:8]) == "\xff\xff\xff\xffrcon"
 }
 
-func (s *Session) isQueryPacket(buf []byte) bool {
+func (s *Session) isQueryRequestPacket(buf []byte) bool {
 	return string(buf[:13]) == "\xff\xff\xff\xffgetstatus" || string(buf[:11]) == "\xff\xff\xff\xffgetinfo"
 }
 
-func (s *Session) isValidPacket(buf []byte) bool {
-	return s.isRconPacket(buf) || s.isQueryPacket(buf)
+func (s *Session) isValidRequestPacket(buf []byte) bool {
+	return s.isRconRequestPacket(buf) || s.isQueryRequestPacket(buf)
 }
 
-func (s *Session) isResponsePacket(buf []byte) bool {
+func (s *Session) isRconResponsePacket(buf []byte) bool {
 	return string(buf[:9]) == "\xff\xff\xff\xffprint"
+}
+
+func (s *Session) isQueryResponsePacket(buf []byte) bool {
+	return string(buf[:18]) == "\xff\xff\xff\xffstatusResponse" || string(buf[:16]) == "\xff\xff\xff\xffinfoResponse"
+}
+
+func (s *Session) isValidResponsePacket(buf []byte) bool {
+	return s.isRconResponsePacket(buf) || s.isQueryResponsePacket(buf)
 }
 
 func (s *Session) listen() error {
@@ -64,8 +72,8 @@ func (s *Session) listen() error {
 }
 
 func (s *Session) proxyFrom(buf []byte) error {
-	if !s.isResponsePacket(buf) {
-		err := errors.New("not a response packet")
+	if !s.isValidResponsePacket(buf) {
+		err := errors.New("not a rcon or query response packet")
 		log.Error(err.Error())
 		return err
 	}
@@ -77,7 +85,7 @@ func (s *Session) proxyFrom(buf []byte) error {
 		return err
 	}
 
-	if log.GetLevel() == log.DebugLevel {
+	if s.isRconResponsePacket(buf) {
 		parts := strings.Split(string(buf[10:]), " ")
 		log.Debugf("Response: %s", strings.Join(parts, " "))
 	}
@@ -86,8 +94,8 @@ func (s *Session) proxyFrom(buf []byte) error {
 }
 
 func (s *Session) proxyTo(buf []byte) error {
-	if !s.isValidPacket(buf) {
-		err := errors.New("not a rcon or query packet")
+	if !s.isValidRequestPacket(buf) {
+		err := errors.New("not a rcon or query request packet")
 		log.Error(err.Error())
 		return err
 	}
@@ -99,7 +107,7 @@ func (s *Session) proxyTo(buf []byte) error {
 		return err
 	}
 
-	if s.isRconPacket(buf) {
+	if s.isRconRequestPacket(buf) {
 		parts := strings.Split(string(buf), " ")
 		log.Infof("From [%s] To [%s] Command: %s", s.caddr.IP.String(), s.serverConn.RemoteAddr().String(), strings.Join(parts[2:], " "))
 	}
