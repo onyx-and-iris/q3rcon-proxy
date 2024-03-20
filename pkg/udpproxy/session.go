@@ -65,7 +65,9 @@ func (s *Session) listen() error {
 
 func (s *Session) proxyFrom(buf []byte) error {
 	if !s.isResponsePacket(buf) {
-		return nil
+		err := errors.New("not a response packet")
+		log.Error(err.Error())
+		return err
 	}
 
 	s.updateTime = time.Now()
