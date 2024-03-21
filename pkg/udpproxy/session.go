@@ -85,9 +85,8 @@ func (s *Session) proxyFrom(buf []byte) error {
 		return err
 	}
 
-	if s.isRconResponsePacket(buf) && log.GetLevel() == log.DebugLevel {
-		parts := strings.Split(string(buf[10:]), " ")
-		log.Debugf("Response: %s", strings.Join(parts, " "))
+	if s.isRconResponsePacket(buf) {
+		log.Debugf("Response: %s", string(buf[10:]))
 	}
 
 	return nil
