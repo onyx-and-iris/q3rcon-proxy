@@ -22,7 +22,7 @@ Avoid sending plaintext rcon commands to the public game server port. In general
 
 ### Special Thanks
 
-[Dylan][user_link] For writing this proxy.
+[Dylan][user_link] For writing [lilproxy][lilproxy_url].
 
 [lilproxy_url]: https://github.com/dgparker/lilproxy
 [user_link]: https://github.com/dgparker
