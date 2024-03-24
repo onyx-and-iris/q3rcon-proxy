@@ -108,7 +108,7 @@ func (s *Session) proxyTo(buf []byte) error {
 
 	if s.isRconRequestPacket(buf) {
 		parts := strings.Split(string(buf), " ")
-		log.Infof("From [%s] To [%s] Command: %s", s.caddr.IP.String(), s.serverConn.RemoteAddr().String(), strings.Join(parts[2:], " "))
+		log.Infof("From [%s] To [%s] Command: %s", s.caddr.IP, s.serverConn.RemoteAddr(), strings.Join(parts[2:], " "))
 	}
 
 	return nil
