@@ -15,7 +15,7 @@ type Client struct {
 	proxyConn *net.UDPConn
 
 	mutex    sync.RWMutex
-	sessions map[string]*Session
+	sessions map[string]*session
 }
 
 func New(port, target string) (*Client, error) {
@@ -33,7 +33,7 @@ func New(port, target string) (*Client, error) {
 		laddr:    laddr,
 		raddr:    raddr,
 		mutex:    sync.RWMutex{},
-		sessions: map[string]*Session{},
+		sessions: map[string]*session{},
 	}, nil
 }
 

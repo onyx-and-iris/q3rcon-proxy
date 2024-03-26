@@ -9,20 +9,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Session struct {
+type session struct {
 	serverConn *net.UDPConn
 	proxyConn  *net.UDPConn
 	caddr      *net.UDPAddr
 	updateTime time.Time
+
+	validator
 }
 
-func newSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) (*Session, error) {
+func newSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) (*session, error) {
 	serverConn, err := net.DialUDP("udp", nil, raddr)
 	if err != nil {
 		return nil, err
 	}
 
-	session := &Session{
+	session := &session{
 		serverConn: serverConn,
 		proxyConn:  proxyConn,
 		caddr:      caddr,
@@ -34,31 +36,7 @@ func newSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) 
 	return session, nil
 }
 
-func (s *Session) isRconRequestPacket(buf []byte) bool {
-	return string(buf[:8]) == "\xff\xff\xff\xffrcon"
-}
-
-func (s *Session) isQueryRequestPacket(buf []byte) bool {
-	return string(buf[:13]) == "\xff\xff\xff\xffgetstatus" || string(buf[:11]) == "\xff\xff\xff\xffgetinfo"
-}
-
-func (s *Session) isValidRequestPacket(buf []byte) bool {
-	return s.isRconRequestPacket(buf) || s.isQueryRequestPacket(buf)
-}
-
-func (s *Session) isRconResponsePacket(buf []byte) bool {
-	return string(buf[:9]) == "\xff\xff\xff\xffprint"
-}
-
-func (s *Session) isQueryResponsePacket(buf []byte) bool {
-	return string(buf[:18]) == "\xff\xff\xff\xffstatusResponse" || string(buf[:16]) == "\xff\xff\xff\xffinfoResponse"
-}
-
-func (s *Session) isValidResponsePacket(buf []byte) bool {
-	return s.isRconResponsePacket(buf) || s.isQueryResponsePacket(buf)
-}
-
-func (s *Session) listen() error {
+func (s *session) listen() error {
 	for {
 		buf := make([]byte, 2048)
 		n, err := s.serverConn.Read(buf)
@@ -71,7 +49,7 @@ func (s *Session) listen() error {
 	}
 }
 
-func (s *Session) proxyFrom(buf []byte) error {
+func (s *session) proxyFrom(buf []byte) error {
 	if !s.isValidResponsePacket(buf) {
 		err := errors.New("not a rcon or query response packet")
 		log.Error(err.Error())
@@ -92,7 +70,7 @@ func (s *Session) proxyFrom(buf []byte) error {
 	return nil
 }
 
-func (s *Session) proxyTo(buf []byte) error {
+func (s *session) proxyTo(buf []byte) error {
 	if !s.isValidRequestPacket(buf) {
 		err := errors.New("not a rcon or query request packet")
 		log.Error(err.Error())
