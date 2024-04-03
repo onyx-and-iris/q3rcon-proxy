@@ -64,7 +64,11 @@ func (s *session) proxyFrom(buf []byte) error {
 	}
 
 	if s.isRconResponsePacket(buf) {
-		log.Debugf("Response: %s", string(buf[10:]))
+		if s.isBadRconRequest(buf) {
+			log.Infof("Response: Bad rcon from %s", s.caddr.IP)
+		} else {
+			log.Debugf("Response: %s", string(buf[10:]))
+		}
 	}
 
 	return nil

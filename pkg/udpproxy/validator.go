@@ -26,3 +26,7 @@ func (v *validator) isQueryResponsePacket(buf []byte) bool {
 func (v *validator) isValidResponsePacket(buf []byte) bool {
 	return v.isRconResponsePacket(buf) || v.isQueryResponsePacket(buf)
 }
+
+func (v *validator) isBadRconRequest(buf []byte) bool {
+	return string(buf[10:18]) == "Bad rcon"
+}
