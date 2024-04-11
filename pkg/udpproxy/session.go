@@ -29,6 +29,7 @@ func newSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) 
 		proxyConn:  proxyConn,
 		caddr:      caddr,
 		updateTime: time.Now(),
+		validator:  newValidator(),
 	}
 
 	go session.listen()
