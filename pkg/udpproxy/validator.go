@@ -13,7 +13,7 @@ type validator struct {
 }
 
 func newValidator() validator {
-	return validator{
+	v := validator{
 		rconRequestHeader:       []byte("\xff\xff\xff\xffrcon"),
 		getstatusRequestHeader:  []byte("\xff\xff\xff\xffgetstatus"),
 		getinfoRequestHeader:    []byte("\xff\xff\xff\xffgetinfo"),
@@ -22,6 +22,7 @@ func newValidator() validator {
 		getinfoResponseHeader:   []byte("\xff\xff\xff\xffinfoResponse\n"),
 		badRconIdentifier:       []byte("Bad rcon"),
 	}
+	return v
 }
 
 func (v *validator) isRconRequestPacket(buf []byte) bool {
