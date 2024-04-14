@@ -24,8 +24,8 @@ func newValidator() validator {
 	return v
 }
 
-func (v *validator) compare(buf, header []byte) bool {
-	return bytes.Equal(buf[:len(header)], header)
+func (v *validator) compare(buf, c []byte) bool {
+	return bytes.Equal(buf[:len(c)], c)
 }
 
 func (v *validator) isRconRequestPacket(buf []byte) bool {
