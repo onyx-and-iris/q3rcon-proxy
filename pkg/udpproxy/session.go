@@ -38,8 +38,8 @@ func newSession(caddr *net.UDPAddr, raddr *net.UDPAddr, proxyConn *net.UDPConn) 
 }
 
 func (s *session) listen() error {
+	buf := make([]byte, 2048)
 	for {
-		buf := make([]byte, 2048)
 		n, err := s.serverConn.Read(buf)
 		if err != nil {
 			log.Error(err)

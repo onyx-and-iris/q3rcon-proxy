@@ -46,8 +46,8 @@ func (c *Client) ListenAndServe() error {
 
 	go c.pruneSessions()
 
+	buf := make([]byte, 2048)
 	for {
-		buf := make([]byte, 2048)
 		n, caddr, err := c.proxyConn.ReadFromUDP(buf)
 		if err != nil {
 			log.Error(err)
