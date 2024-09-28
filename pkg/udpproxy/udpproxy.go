@@ -53,8 +53,8 @@ func (c *Client) ListenAndServe() error {
 			log.Error(err)
 		}
 
-		session, found := c.sessions[caddr.String()]
-		if !found {
+		session, ok := c.sessions[caddr.String()]
+		if !ok {
 			session, err = newSession(caddr, c.raddr, c.proxyConn)
 			if err != nil {
 				log.Error(err)

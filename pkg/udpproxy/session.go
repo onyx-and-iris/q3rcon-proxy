@@ -2,6 +2,7 @@ package udpproxy
 
 import (
 	"errors"
+	"fmt"
 	"net"
 	"strings"
 	"time"
@@ -68,7 +69,7 @@ func (s *session) proxyFrom(buf []byte) error {
 		if s.isBadRconResponse(buf) {
 			log.Infof("Response: Bad rcon from %s", s.caddr.IP)
 		} else {
-			log.Debugf("Response: %s", string(buf[10:]))
+			log.Debugf("Response: %s", string(buf[len(s.rconResponseHeader):]))
 		}
 	}
 
@@ -77,7 +78,13 @@ func (s *session) proxyFrom(buf []byte) error {
 
 func (s *session) proxyTo(buf []byte) error {
 	if !s.isValidRequestPacket(buf) {
-		err := errors.New("not a rcon or query request packet")
+		var err error
+		if s.isChallengeRequestPacket(buf) {
+			parts := strings.SplitN(string(buf), " ", 3)
+			err = fmt.Errorf("invalid challenge from %s with GUID: %s", s.caddr.IP, parts[len(parts)-1])
+		} else {
+			err = errors.New("not a rcon or query request packet")
+		}
 		log.Error(err.Error())
 		return err
 	}
