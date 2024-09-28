@@ -2,6 +2,10 @@
 
 A modification of [lilproxy][lilproxy_url] that forwards only Q3 rcon/query packets. Useful for separating the rcon port from the game server port.
 
+### Why
+
+Unfortunately the Q3Rcon engine ties the rcon port to the game servers public port used for client connections. This proxy will allow you to run rcon through a separate whitelisted port.
+
 ### Use
 
 Run one or multiple rcon proxies by setting an environment variable `Q3RCON_PROXY`
@@ -16,9 +20,11 @@ This would configure q3rcon-proxy to run 3 proxy servers listening on ports `200
 
 Then just run the binary which you can compile yourself, download from `Releases` or use the included Dockerfile.
 
-### Why
+### Logging
 
-Avoid sending plaintext rcon commands to the public game server port. In general I would advise anyone using rcon remotely to use a secured connection but perhaps you've passed rcon to a clan friend who doesn't know about secured connections. Now you can instruct them to use rcon only through a whitelisted port.
+Set the log level with environment variable `Q3RCON_LOGLEVEL`:
+
+`0 = Panic, 1 = Fatal, 2 = Error, 3 = Warning, 4 = Info, 5 = Debug, 6 = Trace`
 
 ### Special Thanks
 

@@ -19,3 +19,7 @@
 
 # Go workspace file
 go.work
+
+# testing
+run.sh
+server.yaml
