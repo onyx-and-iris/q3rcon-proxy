@@ -5,6 +5,7 @@ import (
 	"os"
 	"slices"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -30,20 +31,28 @@ func main() {
 		host = "0.0.0.0"
 	}
 
+	staleTimeout, err := getEnvInt("Q3RCON_STALE_SESSION_TIMEOUT")
+	if err != nil {
+		log.Fatalf("unable to parse Q3RCON_STALE_SESSION_TIMEOUT: %s", err.Error())
+	}
+
 	for _, proxy := range strings.Split(proxies, ";") {
-		go start(host, proxy)
+		go start(host, proxy, staleTimeout)
 	}
 
 	<-make(chan int)
 }
 
-func start(host, proxy string) {
+func start(host, proxy string, staleTimeout int) {
 	port, target := func() (string, string) {
 		x := strings.Split(proxy, ":")
 		return x[0], x[1]
 	}()
 
-	c, err := udpproxy.New(fmt.Sprintf("%s:%s", host, port), fmt.Sprintf("127.0.0.1:%s", target))
+	c, err := udpproxy.New(
+		fmt.Sprintf("%s:%s", host, port),
+		fmt.Sprintf("127.0.0.1:%s", target),
+		udpproxy.WithStaleTimeout(time.Duration(staleTimeout)*time.Minute))
 	if err != nil {
 		log.Fatal(err)
 	}
