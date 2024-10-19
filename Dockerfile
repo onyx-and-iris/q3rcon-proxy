@@ -1,4 +1,4 @@
-FROM golang:1.21
+FROM golang:1.21 AS build_image
 
 WORKDIR /usr/src/app
 
@@ -8,7 +8,13 @@ RUN go mod download && go mod verify
 
 # build binary and place into /usr/local/bin/
 COPY . .
-RUN go build -v -o /usr/local/bin/q3rcon-proxy ./cmd/q3rcon-proxy/
+RUN CGO_ENABLED=0 GOOS=linux go build -o ./bin/q3rcon-proxy ./cmd/q3rcon-proxy/
+
+FROM scratch AS final_image
+
+WORKDIR /bin/
+
+COPY --from=build_image /usr/src/app/bin/q3rcon-proxy .
 
 # Command to run when starting the container
-ENTRYPOINT [ "q3rcon-proxy" ]
+ENTRYPOINT [ "./q3rcon-proxy" ]
