@@ -6,8 +6,9 @@ WORKDIR /usr/src/app
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 
-# build binary and place into /usr/local/bin/
 COPY . .
+
+# build binary, place into ./bin/
 RUN CGO_ENABLED=0 GOOS=linux go build -o ./bin/q3rcon-proxy ./cmd/q3rcon-proxy/
 
 FROM scratch AS final_image
