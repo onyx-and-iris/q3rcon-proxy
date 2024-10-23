@@ -31,19 +31,19 @@ func main() {
 		host = "0.0.0.0"
 	}
 
-	staleTimeout, err := getEnvInt("Q3RCON_STALE_SESSION_TIMEOUT")
+	sessionTimeout, err := getEnvInt("Q3RCON_SESSION_TIMEOUT")
 	if err != nil {
-		log.Fatalf("unable to parse Q3RCON_STALE_SESSION_TIMEOUT: %s", err.Error())
+		log.Fatalf("unable to parse Q3RCON_SESSION_TIMEOUT: %s", err.Error())
 	}
 
 	for _, proxy := range strings.Split(proxies, ";") {
-		go start(host, proxy, staleTimeout)
+		go start(host, proxy, sessionTimeout)
 	}
 
 	<-make(chan int)
 }
 
-func start(host, proxy string, staleTimeout int) {
+func start(host, proxy string, sessionTimeout int) {
 	port, target := func() (string, string) {
 		x := strings.Split(proxy, ":")
 		return x[0], x[1]
@@ -52,7 +52,7 @@ func start(host, proxy string, staleTimeout int) {
 	c, err := udpproxy.New(
 		fmt.Sprintf("%s:%s", host, port),
 		fmt.Sprintf("127.0.0.1:%s", target),
-		udpproxy.WithStaleTimeout(time.Duration(staleTimeout)*time.Minute))
+		udpproxy.WithSessionTimeout(time.Duration(sessionTimeout)*time.Minute))
 	if err != nil {
 		log.Fatal(err)
 	}
