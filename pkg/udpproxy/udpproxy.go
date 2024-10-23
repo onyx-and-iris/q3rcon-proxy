@@ -73,7 +73,7 @@ func (c *Client) ListenAndServe() error {
 			log.Error(err)
 		}
 
-		session, ok := c.sessionCache.Read(caddr.String())
+		session, ok := c.sessionCache.read(caddr.String())
 		if !ok {
 			session, err = newSession(caddr, c.raddr, c.proxyConn)
 			if err != nil {
@@ -81,7 +81,7 @@ func (c *Client) ListenAndServe() error {
 				continue
 			}
 
-			c.sessionCache.Upsert(caddr.String(), session)
+			c.sessionCache.insert(caddr.String(), session)
 		}
 
 		go session.proxyTo(buf[:n])
@@ -94,7 +94,7 @@ func (c *Client) pruneSessions() {
 	for range ticker.C {
 		for _, session := range c.sessionCache.data {
 			if time.Since(session.updateTime) > c.sessionTimeout {
-				c.sessionCache.Delete(session.caddr.String())
+				c.sessionCache.delete(session.caddr.String())
 				log.Tracef("session for %s deleted", session.caddr)
 			}
 		}

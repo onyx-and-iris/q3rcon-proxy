@@ -15,8 +15,8 @@ func newSessionCache() sessionCache {
 	}
 }
 
-// Read returns the associated session for an addr
-func (sc *sessionCache) Read(addr string) (*session, bool) {
+// read returns the associated session for an addr
+func (sc *sessionCache) read(addr string) (*session, bool) {
 	sc.mu.RLock()
 	defer sc.mu.RUnlock()
 
@@ -24,16 +24,16 @@ func (sc *sessionCache) Read(addr string) (*session, bool) {
 	return v, ok
 }
 
-// Upsert overrides the session for a given addr.
-func (sc *sessionCache) Upsert(addr string, session *session) {
+// insert adds a session for a given addr.
+func (sc *sessionCache) insert(addr string, session *session) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 
 	sc.data[addr] = session
 }
 
-// Delete removes the session for the given addr.
-func (sc *sessionCache) Delete(addr string) {
+// delete removes the session for the given addr.
+func (sc *sessionCache) delete(addr string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 
