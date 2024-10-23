@@ -2,7 +2,6 @@ package udpproxy
 
 import (
 	"net"
-	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -11,15 +10,15 @@ import (
 // Option is a functional option type that allows us to configure the Client.
 type Option func(*Client)
 
-// WithStaleTimeout is a functional option to set the stale session timeout
-func WithStaleTimeout(timeout time.Duration) Option {
+// WithSessionTimeout is a functional option to set the session timeout
+func WithSessionTimeout(timeout time.Duration) Option {
 	return func(c *Client) {
 		if timeout < time.Minute {
 			log.Warnf("cannot set stale session timeout to less than 1 minute.. defaulting to 5 minutes")
 			return
 		}
 
-		c.timeout = timeout
+		c.sessionTimeout = timeout
 	}
 }
 
@@ -29,10 +28,8 @@ type Client struct {
 
 	proxyConn *net.UDPConn
 
-	mutex    sync.RWMutex
-	sessions map[string]*session
-
-	timeout time.Duration
+	sessionCache   sessionCache
+	sessionTimeout time.Duration
 }
 
 func New(port, target string, options ...Option) (*Client, error) {
@@ -47,11 +44,10 @@ func New(port, target string, options ...Option) (*Client, error) {
 	}
 
 	c := &Client{
-		laddr:    laddr,
-		raddr:    raddr,
-		mutex:    sync.RWMutex{},
-		sessions: map[string]*session{},
-		timeout:  5 * time.Minute,
+		laddr:          laddr,
+		raddr:          raddr,
+		sessionCache:   newSessionCache(),
+		sessionTimeout: 5 * time.Minute,
 	}
 
 	for _, o := range options {
@@ -77,7 +73,7 @@ func (c *Client) ListenAndServe() error {
 			log.Error(err)
 		}
 
-		session, ok := c.sessions[caddr.String()]
+		session, ok := c.sessionCache.Read(caddr.String())
 		if !ok {
 			session, err = newSession(caddr, c.raddr, c.proxyConn)
 			if err != nil {
@@ -85,7 +81,7 @@ func (c *Client) ListenAndServe() error {
 				continue
 			}
 
-			c.sessions[caddr.String()] = session
+			c.sessionCache.Upsert(caddr.String(), session)
 		}
 
 		go session.proxyTo(buf[:n])
@@ -95,16 +91,12 @@ func (c *Client) ListenAndServe() error {
 func (c *Client) pruneSessions() {
 	ticker := time.NewTicker(1 * time.Minute)
 
-	// the locks here could be abusive and i dont even know if this is a real
-	// problem but we definitely need to clean up stale sessions
 	for range ticker.C {
-		for _, session := range c.sessions {
-			c.mutex.RLock()
-			if time.Since(session.updateTime) > c.timeout {
-				delete(c.sessions, session.caddr.String())
+		for _, session := range c.sessionCache.data {
+			if time.Since(session.updateTime) > c.sessionTimeout {
+				c.sessionCache.Delete(session.caddr.String())
 				log.Tracef("session for %s deleted", session.caddr)
 			}
-			c.mutex.RUnlock()
 		}
 	}
 }
